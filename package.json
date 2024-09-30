@@ -1,0 +1,25 @@
+{
+  "name": "my-mock-server",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@anatine/zod-mock": "^3.13.4",
+    "@faker-js/faker": "^9.0.3",
+    "@hono/zod-validator": "^0.3.0",
+    "hono": "^4.6.3",
+    "next": "^14.2.13",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "18.11.18",
+    "@types/react": "18.0.26",
+    "@types/react-dom": "18.0.10",
+    "typescript": "^5"
+  }
+}
