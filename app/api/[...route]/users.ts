@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { generateMock } from '@anatine/zod-mock';
 import { z } from 'zod';
-import { flattenMapToArray } from '../../utils/helpers';
+import { flattenMapToArrayAndSortByDate } from '../../utils/helpers';
 
 const userSchema = z.object({
   uid: z.string().nonempty(),
@@ -18,7 +18,7 @@ const userSchema = z.object({
     zip: z.string(),
   }),
   age: z.number().min(18).max(120),
-  dateAdded: z.date().default(new Date()),
+  dateAdded: z.date(),
 });
 
 type userType = z.infer<typeof userSchema>;
@@ -29,19 +29,20 @@ const app = new Hono()
 	.get('/', 
     async (c) => {
       const force = c.req.query('force_clear');
-
-      const mockUser = generateMock(userSchema);
-
+      
       if (usersCache.size >= 150) {
-        const usersArray = flattenMapToArray(usersCache);
+        const usersArray = flattenMapToArrayAndSortByDate(usersCache)
         return c.json({ users: usersArray });
       }
 
       if (force) usersCache.clear();
 
+      const mockUser = generateMock(userSchema);
+      mockUser.dateAdded = new Date()
+
       usersCache.set(mockUser.uid, mockUser);
 
-      const usersArray = flattenMapToArray(usersCache);
+      const usersArray = flattenMapToArrayAndSortByDate(usersCache)
       return c.json({ users: usersArray });
 	})
   .get('/:uid', async (c) => {
@@ -58,12 +59,18 @@ const app = new Hono()
   .get('/generate/:count', async (c) => {
     const { count } = c.req.param();
 
+    if (usersCache.size >= 150) {
+      const usersArray = flattenMapToArrayAndSortByDate(usersCache)
+      return c.json({ users: usersArray });
+    }
+
     for (let i = 0; i <= parseInt(count); i++) {
       const mockUser = generateMock(userSchema);
+      mockUser.dateAdded = new Date();
       usersCache.set(mockUser.uid, mockUser);
     }
 
-    const usersArray = flattenMapToArray(usersCache);
+    const usersArray = flattenMapToArrayAndSortByDate(usersCache)
     return c.json({ users: usersArray });
   })
   .patch('/:uid', 
