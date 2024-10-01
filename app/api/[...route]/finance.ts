@@ -5,6 +5,9 @@ import { z } from 'zod';
 import { faker } from '@faker-js/faker';
 import { flattenMapToArrayAndSortByDate } from '../../utils/helpers';
 
+const MIN_TRANSACTIONS = 100
+const MAX_TRANSACTIONS = 1500
+
 const transactionSchema = z.object({
   uid: z.string().nonempty(),
   date: z.date(),
@@ -53,17 +56,15 @@ const app = new Hono()
 	.get('/transactions', 
     async (c) => {
       const force = c.req.query('force_clear');
-      
-      if (transactionsCache.size >= 1500) {
-        const transactionsArray = flattenMapToArrayAndSortByDate(transactionsCache)
-        return c.json({ transactions: transactionsArray });
-      }
 
       if (force) transactionsCache.clear();
-
-      const mockTransaction = generateTransaction()
-
-      transactionsCache.set(mockTransaction.uid, mockTransaction);
+      
+      if (transactionsCache.size < MIN_TRANSACTIONS) {
+        for (let i = 0; i < MIN_TRANSACTIONS; i++) {
+          const mockTransaction = generateTransaction()
+          transactionsCache.set(mockTransaction.uid, mockTransaction)
+        }
+      }
 
       const transactionsArray = flattenMapToArrayAndSortByDate(transactionsCache)
       return c.json({ transactions: transactionsArray });
@@ -80,14 +81,16 @@ const app = new Hono()
     return c.json({ transaction });
   })
   .get('transactions/generate/:count', async (c) => {
-    const { count } = c.req.param();
-
-    if (transactionsCache.size >= 1500) {
+    let count = parseInt(c.req.param().count);
+    
+    if (transactionsCache.size >= MAX_TRANSACTIONS) {
       const transactionsArray = flattenMapToArrayAndSortByDate(transactionsCache)
       return c.json({ transactions: transactionsArray });
     }
 
-    for (let i = 0; i <= parseInt(count); i++) {
+    if (count > MAX_TRANSACTIONS) count = MAX_TRANSACTIONS
+
+    for (let i = 0; i <= count; i++) {
       const mockTransaction = generateTransaction();
       transactionsCache.set(mockTransaction.uid, mockTransaction);
     }
