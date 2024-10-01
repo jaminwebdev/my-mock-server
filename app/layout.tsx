@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+// `pages/_app.js`
+import '../styles/global.css';
 
 export const metadata: Metadata = {
   title: 'Hono | nextjs',
@@ -12,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className='bg-slate-800'>{children}</body>
     </html>
   )
 }
