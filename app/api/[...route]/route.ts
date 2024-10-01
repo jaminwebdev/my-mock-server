@@ -3,6 +3,7 @@ import { requestId } from 'hono/request-id';
 import { handle } from 'hono/vercel';
 import users from './users';
 import finance from './finance'
+import realEstate from './real-estate'
 
 export const runtime = 'edge';
 
@@ -13,6 +14,7 @@ app.use('*', requestId());
 const routes = app
 	.route('/users', users)
   .route('/finance', finance)
+  .route('/real-estate', realEstate)
 
 export const GET = handle(app);
 export const POST = handle(app);
