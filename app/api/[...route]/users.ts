@@ -26,7 +26,7 @@ const userSchema = z.object({
   }),
   age: z.number().min(18).max(120),
   gender: z.string(),
-  dateAdded: z.date(),
+  date: z.date(),
   favoriteSong: z.string(),
 });
 
@@ -41,7 +41,7 @@ const generateUser = () => {
       avatar: () => faker.image.avatar()
     }
   });
-  mockUser.dateAdded = new Date()
+  mockUser.date = new Date()
   return mockUser
 }
 

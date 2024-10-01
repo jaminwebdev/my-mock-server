@@ -3,6 +3,6 @@ export const flattenMapToArray = (map: Map<string, any>) => {
 };
 
 export const flattenMapToArrayAndSortByDate = (map: Map<string, any>) => {
-  return flattenMapToArray(map).sort((a, b) => a.dateAdded.getTime() - b.dateAdded.getTime());
+  return flattenMapToArray(map).sort((a, b) => a.date.getTime() - b.date.getTime());
 };
 
