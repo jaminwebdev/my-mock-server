@@ -2,14 +2,21 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { generateMock } from '@anatine/zod-mock';
 import { z } from 'zod';
+import { faker } from '@faker-js/faker';
 import { flattenMapToArrayAndSortByDate } from '../../utils/helpers';
 
 const userSchema = z.object({
   uid: z.string().nonempty(),
   fullName: z.string(),
-  email: z.string().email().optional(),
-  phoneNumber: z.string().min(10).optional(),
-  jobTitle: z.string().optional(),
+  displayName: z.string(),
+  avatar: z.string(),
+  image: z.string(),
+  bio: z.string(),
+  email: z.string().email(),
+  phoneNumber: z.string().min(10),
+  jobTitle: z.string(),
+  jobType: z.string(),
+  company: z.string(),
   address: z.object({
     buildingNumber: z.string(),
     street: z.string(),
@@ -18,12 +25,25 @@ const userSchema = z.object({
     zip: z.string(),
   }),
   age: z.number().min(18).max(120),
+  gender: z.string(),
   dateAdded: z.date(),
+  favoriteSong: z.string(),
 });
 
 type userType = z.infer<typeof userSchema>;
 
 const usersCache = new Map<string, userType>();
+
+const generateUser = () => {
+  const mockUser = generateMock(userSchema, {
+    stringMap:{
+      favoriteSong: () => faker.music.songName(),
+      avatar: () => faker.image.avatar()
+    }
+  });
+  mockUser.dateAdded = new Date()
+  return mockUser
+}
 
 const app = new Hono()
 	.get('/', 
@@ -37,8 +57,7 @@ const app = new Hono()
 
       if (force) usersCache.clear();
 
-      const mockUser = generateMock(userSchema);
-      mockUser.dateAdded = new Date()
+      const mockUser = generateUser()
 
       usersCache.set(mockUser.uid, mockUser);
 
@@ -65,8 +84,7 @@ const app = new Hono()
     }
 
     for (let i = 0; i <= parseInt(count); i++) {
-      const mockUser = generateMock(userSchema);
-      mockUser.dateAdded = new Date();
+      const mockUser = generateUser();
       usersCache.set(mockUser.uid, mockUser);
     }
 
