@@ -5,6 +5,9 @@ import { z } from 'zod';
 import { faker } from '@faker-js/faker';
 import { flattenMapToArrayAndSortByDate } from '../../utils/helpers';
 
+const MIN_USERS = 20
+const MAX_USERS = 150
+
 const userSchema = z.object({
   uid: z.string().nonempty(),
   fullName: z.string(),
@@ -49,17 +52,15 @@ const app = new Hono()
 	.get('/', 
     async (c) => {
       const force = c.req.query('force_clear');
-      
-      if (usersCache.size >= 150) {
-        const usersArray = flattenMapToArrayAndSortByDate(usersCache)
-        return c.json({ users: usersArray });
-      }
 
       if (force) usersCache.clear();
 
-      const mockUser = generateUser()
-
-      usersCache.set(mockUser.uid, mockUser);
+      if (usersCache.size < MIN_USERS) {
+        for (let i = 0; i < MIN_USERS; i++) {
+          const mockUser = generateUser();
+          usersCache.set(mockUser.uid, mockUser);
+        }
+      }
 
       const usersArray = flattenMapToArrayAndSortByDate(usersCache)
       return c.json({ users: usersArray });
@@ -76,14 +77,16 @@ const app = new Hono()
     return c.json({ user });
   })
   .get('/generate/:count', async (c) => {
-    const { count } = c.req.param();
+    let count = parseInt(c.req.param().count);
 
-    if (usersCache.size >= 150) {
+    if (usersCache.size >= MAX_USERS) {
       const usersArray = flattenMapToArrayAndSortByDate(usersCache)
       return c.json({ users: usersArray });
     }
 
-    for (let i = 0; i <= parseInt(count); i++) {
+    if (count > MAX_USERS) count = MAX_USERS
+
+    for (let i = 0; i <= count; i++) {
       const mockUser = generateUser();
       usersCache.set(mockUser.uid, mockUser);
     }
