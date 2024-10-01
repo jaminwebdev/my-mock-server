@@ -6,3 +6,6 @@ export const flattenMapToArrayAndSortByDate = (map: Map<string, any>) => {
   return flattenMapToArray(map).sort((a, b) => a.date.getTime() - b.date.getTime());
 };
 
+export const flattenMapToArrayAndSortByPrice = (map: Map<string, any>) => {
+  return flattenMapToArray(map).sort((a, b) => a.price - b.price);
+};
