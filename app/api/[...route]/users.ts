@@ -55,6 +55,40 @@ const app = new Hono()
     }
     return c.json({ user });
   })
+  .patch('/:uid', 
+		zValidator(
+			'param',
+			z.object({
+				uid: z.string().optional()
+			})
+		),
+		zValidator('json', userSchema.partial()),
+    async (c) => {
+    const { uid } = c.req.valid('param');
+		const values = c.req.valid('json');
+
+    if (!uid) {
+      return c.json({ error: 'Must provide a unique id' }, 400);
+    }
+    
+    const user = usersCache.get(uid);
+
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    usersCache.set(uid, { ...user, ...values });
+    return c.json({ user: usersCache.get(uid) });
+  })
+  .delete('/:uid', async (c) => {
+    const { uid } = c.req.param();
+    const user = usersCache.get(uid);
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+    usersCache.delete(uid);
+    return c.json({ message: 'User deleted' });
+  })
 	
 
 export default app;
