@@ -7,12 +7,13 @@ import { flattenMapToArrayAndSortByDate } from '../../utils/helpers';
 
 const MIN_TRANSACTIONS = 100
 const MAX_TRANSACTIONS = 1500
+const MIN_ACCOUNTS = 2
+const MAX_ACCOUNTS = 10
 
 const transactionSchema = z.object({
   uid: z.string().nonempty(),
   date: z.date(),
   accountNumber: z.string(),
-  transactionDescription: z.string(),
   transactionType: z.string(),
   amount: z.string(),
 });
@@ -35,12 +36,21 @@ const accountsCache = new Map<string, accountType>();
 const generateAccount = () => {
   const mockAccount = generateMock(accountSchema)
   mockAccount.date = new Date()
+  mockAccount.balance = parseFloat(faker.finance.amount({
+    min: 100,
+    max: 20000
+  }))
   return mockAccount
 }
 
 const generateTransaction = () => {
   const mockTransaction  = generateMock(transactionSchema);
   mockTransaction.date = new Date()
+  mockTransaction.amount = faker.finance.amount({
+    min: 0,
+    max: 750
+  });
+  mockTransaction.transactionType = Math.random() < 0.75 ? 'debit' : 'credit';
   if (accountsCache.size <= 0) {
     const mockAccount = generateAccount()
     accountsCache.set(mockAccount.uid, mockAccount);
@@ -137,20 +147,29 @@ const app = new Hono()
   })
   .get('/accounts', async (c) => {
     const force = c.req.query('force_clear');
-      
-    if (accountsCache.size >= 50) {
-      const accountsArray = flattenMapToArrayAndSortByDate(accountsCache)
-      return c.json({ accounts: accountsArray });
-    }
 
     if (force) accountsCache.clear();
-
-    const mockAccount = generateAccount()
-
-    accountsCache.set(mockAccount.uid, mockAccount);
+    
+    if (accountsCache.size < MIN_ACCOUNTS) {
+      for (let i = 0; i < MIN_ACCOUNTS; i++) {
+        const mockAccount = generateAccount()
+        accountsCache.set(mockAccount.uid, mockAccount)
+      }
+    }
 
     const accountsArray = flattenMapToArrayAndSortByDate(accountsCache)
     return c.json({ accounts: accountsArray });
+  })
+  .get('/accounts/:uid', async (c) => {
+    const { uid } = c.req.param();
+
+    const account = accountsCache.get(uid);
+
+    if (!account) {
+      return c.json({ error: 'Account not found' }, 404);
+    }
+
+    return c.json({ account });
   })
 	
 
