@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { generateMock } from '@anatine/zod-mock';
 import { z } from 'zod';
+import { flattenMapToArray } from '../../utils/helpers';
 
 const userSchema = z.object({
   uid: z.string().nonempty(),
@@ -32,28 +33,38 @@ const app = new Hono()
       const mockUser = generateMock(userSchema);
 
       if (usersCache.size >= 150) {
-        const usersArray = [...usersCache.entries()].map(([_, value]) => ({ ...value }));
-
+        const usersArray = flattenMapToArray(usersCache);
         return c.json({ users: usersArray });
       }
 
-      if (force) {
-        usersCache.clear();
-      }
+      if (force) usersCache.clear();
 
       usersCache.set(mockUser.uid, mockUser);
 
-      const usersArray = [...usersCache.entries()].map(([_, value]) => ({ ...value }));
-
+      const usersArray = flattenMapToArray(usersCache);
       return c.json({ users: usersArray });
 	})
   .get('/:uid', async (c) => {
     const { uid } = c.req.param();
+
     const user = usersCache.get(uid);
+
     if (!user) {
       return c.json({ error: 'User not found' }, 404);
     }
+
     return c.json({ user });
+  })
+  .get('/generate/:count', async (c) => {
+    const { count } = c.req.param();
+
+    for (let i = 0; i <= parseInt(count); i++) {
+      const mockUser = generateMock(userSchema);
+      usersCache.set(mockUser.uid, mockUser);
+    }
+
+    const usersArray = flattenMapToArray(usersCache);
+    return c.json({ users: usersArray });
   })
   .patch('/:uid', 
 		zValidator(
@@ -83,10 +94,13 @@ const app = new Hono()
   .delete('/:uid', async (c) => {
     const { uid } = c.req.param();
     const user = usersCache.get(uid);
+
     if (!user) {
       return c.json({ error: 'User not found' }, 404);
     }
+
     usersCache.delete(uid);
+
     return c.json({ message: 'User deleted' });
   })
 	
