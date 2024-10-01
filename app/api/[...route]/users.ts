@@ -25,7 +25,7 @@ const userSchema = z.object({
     street: z.string(),
     city: z.string(),
     state: z.string(),
-    zip: z.string(),
+    zipCode: z.string(),
   }),
   age: z.number().min(18).max(120),
   gender: z.string(),
