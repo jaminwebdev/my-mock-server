@@ -5,8 +5,6 @@ import users from './users';
 import finance from './finance'
 import realEstate from './real-estate'
 
-export const runtime = 'edge';
-
 const app = new Hono().basePath('/api');
 
 app.use('*', requestId());
