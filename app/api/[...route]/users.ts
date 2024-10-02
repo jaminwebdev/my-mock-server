@@ -4,64 +4,17 @@ import { generateMock } from '@anatine/zod-mock';
 import { z } from 'zod';
 import { faker } from '@faker-js/faker';
 import { flattenMapToArrayAndSortByDate } from '../../utils/helpers';
+import { userSchema, users, userType } from '@/app/utils/data/users';
 
 const MIN_USERS = 20
 const MAX_USERS = 150
 
-const userSchema = z.object({
-  uid: z.string().nonempty(),
-  fullName: z.string(),
-  displayName: z.string(),
-  avatar: z.string(),
-  image: z.string(),
-  bio: z.string(),
-  email: z.string().email(),
-  phoneNumber: z.string().min(10),
-  jobTitle: z.string(),
-  jobType: z.string(),
-  company: z.string(),
-  address: z.object({
-    buildingNumber: z.string(),
-    street: z.string(),
-    city: z.string(),
-    state: z.string(),
-    zipCode: z.string(),
-  }),
-  age: z.number().min(18).max(120),
-  gender: z.string(),
-  date: z.date(),
-  favoriteSong: z.string(),
-});
-
-type userType = z.infer<typeof userSchema>;
-
 const usersCache = new Map<string, userType>();
-
-const generateUser = () => {
-  const mockUser = generateMock(userSchema, {
-    stringMap:{
-      favoriteSong: () => faker.music.songName(),
-      avatar: () => faker.image.avatar()
-    }
-  });
-  mockUser.date = new Date()
-  return mockUser
-}
+users.map(user => usersCache.set(user.uid, user))
 
 const app = new Hono()
 	.get('/', 
     async (c) => {
-      const force = c.req.query('force_clear');
-
-      if (force) usersCache.clear();
-
-      if (usersCache.size < MIN_USERS) {
-        for (let i = 0; i < MIN_USERS; i++) {
-          const mockUser = generateUser();
-          usersCache.set(mockUser.uid, mockUser);
-        }
-      }
-
       const usersArray = flattenMapToArrayAndSortByDate(usersCache)
       return c.json({ users: usersArray });
 	})
@@ -76,20 +29,9 @@ const app = new Hono()
 
     return c.json({ user });
   })
-  .get('/generate/:count', async (c) => {
-    let count = parseInt(c.req.param().count);
-
-    if (usersCache.size >= MAX_USERS) {
-      const usersArray = flattenMapToArrayAndSortByDate(usersCache)
-      return c.json({ users: usersArray });
-    }
-
-    if (count > MAX_USERS) count = MAX_USERS
-
-    for (let i = 0; i <= count; i++) {
-      const mockUser = generateUser();
-      usersCache.set(mockUser.uid, mockUser);
-    }
+  .get('/reset', async (c) => {
+    const usersCache = new Map<string, userType>();
+    users.map(user => usersCache.set(user.uid, user))
 
     const usersArray = flattenMapToArrayAndSortByDate(usersCache)
     return c.json({ users: usersArray });

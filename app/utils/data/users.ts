@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export const users = [
   {
       "uid": "954e4a11-fc2d-4b53-bfbf-0fa991daa167",
@@ -4617,3 +4619,33 @@ export const users = [
       "lastModified": "2023-11-27T08:41:11.070Z"
   }
 ]
+
+export const userSchema = z.object({
+  uid: z.string(),
+  fullName: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  displayName: z.string(),
+  avatar: z.string(),
+  image: z.string(),
+  bio: z.string(),
+  email: z.string().email(),
+  phoneNumber: z.string().min(10),
+  jobTitle: z.string(),
+  jobType: z.string(),
+  company: z.string(),
+  address: z.object({
+    buildingNumber: z.string(),
+    street: z.string(),
+    city: z.string(),
+    state: z.string(),
+    zipCode: z.string(),
+  }),
+  age: z.number().min(18).max(120),
+  gender: z.string(),
+  favoriteSong: z.string(),
+  dateAdded: z.string(),
+  lastModified: z.string()
+});
+
+export type userType = z.infer<typeof userSchema>;
