@@ -8,7 +8,7 @@ import { flattenMapToArrayAndSortByDate } from '../../utils/helpers';
 const MIN_TRANSACTIONS = 100
 const MAX_TRANSACTIONS = 1500
 const MIN_ACCOUNTS = 2
-const MAX_ACCOUNTS = 10
+const MAX_ACCOUNTS = 15
 
 const transactionSchema = z.object({
   uid: z.string().nonempty(),
@@ -170,6 +170,24 @@ const app = new Hono()
     }
 
     return c.json({ account });
+  })
+  .get('accounts/generate/:count', async (c) => {
+    let count = parseInt(c.req.param().count);
+    
+    if (accountsCache.size >= MAX_ACCOUNTS) {
+      const accountsArray = flattenMapToArrayAndSortByDate(accountsCache)
+      return c.json({ transactions: accountsArray });
+    }
+
+    if (count > MAX_ACCOUNTS) count = MAX_ACCOUNTS
+
+    for (let i = 0; i <= count; i++) {
+      const mockAccount = generateAccount();
+      accountsCache.set(mockAccount.uid, mockAccount);
+    }
+
+    const accountsArray = flattenMapToArrayAndSortByDate(accountsCache)
+    return c.json({ accounts: accountsArray });
   })
 	
 
