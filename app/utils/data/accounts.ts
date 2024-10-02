@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export const accounts = [
   {
     "uid": "7babb6df-f14c-47bd-8605-cc1192c11337",
@@ -102,3 +104,12 @@ export const accounts = [
     "date": "2024-10-02T14:52:33.078Z"
   }
 ]
+
+const accountSchema = z.object({
+  uid: z.string(),
+  accountName: z.string(),
+  balance: z.number().min(0),
+  date: z.string()
+});
+
+export type accountType = z.infer<typeof accountSchema>;

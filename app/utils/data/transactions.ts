@@ -1,4 +1,6 @@
-export const transactions = [
+import { z } from 'zod';
+
+export const transactions: transactionType[] = [
   {
       "uid": "b4bc0d4d-0c31-45b4-91f2-306c14385b04",
       "date": "2024-04-22T17:30:00.462Z",
@@ -8823,4 +8825,15 @@ export const categories = [
   'utilities',
   'pets',
   'miscellanous'
-]
+] as const
+
+export const transactionSchema = z.object({
+  uid: z.string(),
+  date: z.string(),
+  accountNumber: z.string(),
+  transactionType: z.enum(['credit', 'debit']),
+  amount: z.number(),
+  category: z.enum(categories)
+});
+
+export type transactionType = z.infer<typeof transactionSchema>;
